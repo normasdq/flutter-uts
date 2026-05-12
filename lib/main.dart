@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 void main() {
   runApp(const MyApp());
@@ -9,7 +10,7 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return GetMaterialApp(
       title: 'Project UTS BookHub',
       theme: ThemeData(primarySwatch: Colors.blue),
       home: const MainScreen(),
@@ -19,40 +20,40 @@ class MyApp extends StatelessWidget {
 }
 
 // MAIN SCREEN
-class MainScreen extends StatefulWidget {
+class MainController extends GetxController {
+  var selectedIndex = 0.obs;
+
+  void changeTabIndex(int index) {
+    selectedIndex.value = index;
+  }
+}
+
+// MAIN SCREEN
+class MainScreen extends StatelessWidget {
   const MainScreen({super.key});
 
   @override
-  State<MainScreen> createState() => _MainScreenState();
-}
-
-class _MainScreenState extends State<MainScreen> {
-  int _selectedIndex = 0;
-
-  final List<Widget> _pages = [
-    const HomeScreen(),
-    const AddBookScreen(),
-    const ProfileScreen(),
-  ];
-
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: _pages[_selectedIndex],
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
-        onTap: _onItemTapped,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Beranda'),
-          BottomNavigationBarItem(icon: Icon(Icons.add_box), label: 'Tambah'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profil'),
-        ],
+    final MainController controller = Get.put(MainController());
+
+    final List<Widget> pages = [
+      const HomeScreen(),
+      const AddBookScreen(),
+      const ProfileScreen(),
+    ];
+
+    return Obx(
+      () => Scaffold(
+        body: pages[controller.selectedIndex.value],
+        bottomNavigationBar: BottomNavigationBar(
+          currentIndex: controller.selectedIndex.value,
+          onTap: controller.changeTabIndex,
+          items: const [
+            BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Beranda'),
+            BottomNavigationBarItem(icon: Icon(Icons.add_box), label: 'Tambah'),
+            BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profil'),
+          ],
+        ),
       ),
     );
   }
@@ -102,13 +103,10 @@ class HomeScreen extends StatelessWidget {
                     subtitle: Text(books[index]['penulis']!),
                     trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                     onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => DetailScreen(
-                            judul: books[index]['judul']!,
-                            penulis: books[index]['penulis']!,
-                          ),
+                      Get.to(
+                        () => DetailScreen(
+                          judul: books[index]['judul']!,
+                          penulis: books[index]['penulis']!,
                         ),
                       );
                     },
@@ -149,7 +147,7 @@ class DetailScreen extends StatelessWidget {
             const SizedBox(height: 20),
             ElevatedButton(
               onPressed: () {
-                Navigator.pop(context);
+                Get.back();
               },
               child: const Text('Kembali'),
             ),
@@ -188,8 +186,9 @@ class _AddBookScreenState extends State<AddBookScreen> {
                   border: OutlineInputBorder(),
                 ),
                 validator: (value) {
-                  if (value == null || value.isEmpty)
+                  if (value == null || value.isEmpty) {
                     return 'Judul tidak boleh kosong';
+                  }
                   return null;
                 },
               ),
@@ -200,8 +199,9 @@ class _AddBookScreenState extends State<AddBookScreen> {
                   border: OutlineInputBorder(),
                 ),
                 validator: (value) {
-                  if (value == null || value.isEmpty)
+                  if (value == null || value.isEmpty) {
                     return 'Penulis tidak boleh kosong';
+                  }
                   return null;
                 },
               ),
@@ -209,10 +209,13 @@ class _AddBookScreenState extends State<AddBookScreen> {
               ElevatedButton(
                 onPressed: () {
                   if (_formKey.currentState!.validate()) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Buku berhasil ditambahkan!'),
-                      ),
+                    Get.snackbar(
+                      'Sukses',
+                      'Buku berhasil ditambahkan!',
+                      snackPosition: SnackPosition.BOTTOM,
+                      backgroundColor: Colors.green,
+                      colorText: Colors.white,
+                      margin: const EdgeInsets.all(10),
                     );
                   }
                 },
@@ -259,24 +262,14 @@ class ProfileScreen extends StatelessWidget {
             'Norma Sidiq Adiluhur',
             style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
           ),
-          const Text(
-            'NIM: 2301111110061',
-            style: TextStyle(color: Colors.grey),
-          ),
           const SizedBox(height: 20),
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Column(
                 children: const [
                   Icon(Icons.library_books, color: Colors.blue),
                   Text('4 Buku'),
-                ],
-              ),
-              Column(
-                children: const [
-                  Icon(Icons.star, color: Colors.orange),
-                  Text('Premium'),
                 ],
               ),
             ],
